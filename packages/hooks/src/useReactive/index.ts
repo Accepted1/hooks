@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef,isValidElement } from 'react';
 import useCreation from '../useCreation';
 import useUpdate from '../useUpdate';
 import { isObject } from '../utils';
@@ -22,10 +22,14 @@ function observer<T extends Record<string, any>>(initialVal: T, cb: () => void):
     return initialVal;
   }
 
+  // Virtual DOM 不能作爲代理
+  if(isValidElement(initialVal)){
+    return initialVal;
+  }
   const proxy = new Proxy<T>(initialVal, {
     get(target, key, receiver) {
       const res = Reflect.get(target, key, receiver);
-      return isObject(res) ? observer(res, cb) : res;
+      return isObject(res) ? observer(res, cb) : Reflect.get(target, key);
     },
     set(target, key, val) {
       const ret = Reflect.set(target, key, val);
